@@ -6,6 +6,7 @@ import torch.nn as nn
 import torch.nn.parallel as P
 import torch.utils.model_zoo
 
+
 class Model(nn.Module):
     def __init__(self, args, ckp):
         super(Model, self).__init__()
@@ -28,8 +29,8 @@ class Model(nn.Module):
             self.model.half()
 
         self.load(
-            ckp.get_path('model'),
-            pre_train=args.pre_train,
+            ckp.get_path('model'),     # ../experiment/
+            pre_train=args.pre_train,  # download
             resume=args.resume,
             cpu=args.cpu
         )
