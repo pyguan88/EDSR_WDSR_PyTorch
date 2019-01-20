@@ -19,15 +19,15 @@ class SRData(data.Dataset):
         self.do_eval = True
         self.benchmark = benchmark
         self.input_large = (args.model == 'VDSR')
-        self.scale = args.scale
+        self.scale = args.scale  # 放大倍率
         self.idx_scale = 0
         
         self._set_filesystem(args.dir_data)
         if args.ext.find('img') < 0:
-            path_bin = os.path.join(self.apath, 'bin')
+            path_bin = os.path.join(self.apath, 'bin')  # data_train/bin
             os.makedirs(path_bin, exist_ok=True)
 
-        list_hr, list_lr = self._scan()
+        list_hr, list_lr = self._scan()  # 获取图片路径
         if args.ext.find('img') >= 0 or benchmark:
             self.images_hr, self.images_lr = list_hr, list_lr
         elif args.ext.find('sep') >= 0:
@@ -47,7 +47,7 @@ class SRData(data.Dataset):
             self.images_hr, self.images_lr = [], [[] for _ in self.scale]
             for h in list_hr:
                 b = h.replace(self.apath, path_bin)
-                b = b.replace(self.ext[0], '.pt')
+                b = b.replace(self.ext[0], '.pt')  # hr文件名替换为二进制文件名
                 self.images_hr.append(b)
                 self._check_and_load(args.ext, h, b, verbose=True) 
             for i, ll in enumerate(list_lr):
@@ -65,9 +65,9 @@ class SRData(data.Dataset):
                 self.repeat = max(n_patches // n_images, 1)
 
     # Below functions as used to prepare images
-    def _scan(self):
+    def _scan(self):  # 确定图片路径
         names_hr = sorted(
-            glob.glob(os.path.join(self.dir_hr, '*' + self.ext[0]))
+            glob.glob(os.path.join(self.dir_hr, '*' + self.ext[0]))  # data_train\DIV2K_train_HR\*.png
         )
         names_lr = [[] for _ in self.scale]
         for f in names_hr:
@@ -82,7 +82,8 @@ class SRData(data.Dataset):
         return names_hr, names_lr
 
     def _set_filesystem(self, dir_data):
-        self.apath = os.path.join(dir_data, self.name)
+        # 获取图片目录，被外层改写以适应不同数据集
+        self.apath = os.path.join(dir_data, self.name)  # name就是参数data_train的值
         self.dir_hr = os.path.join(self.apath, 'HR')
         self.dir_lr = os.path.join(self.apath, 'LR_bicubic')
         if self.input_large: self.dir_lr += 'L'
@@ -125,8 +126,12 @@ class SRData(data.Dataset):
             hr = imageio.imread(f_hr)
             lr = imageio.imread(f_lr)
         elif self.args.ext.find('sep') >= 0:
-            with open(f_hr, 'rb') as _f:
-                hr = pickle.load(_f)
+            try:
+                with open(f_hr, 'rb') as _f:
+                    hr = pickle.load(_f)
+            except EOFError as e:
+                print('文件 {} 读取异常'.format(f_hr))
+                raise e
             with open(f_lr, 'rb') as _f:
                 lr = pickle.load(_f)
 
