@@ -8,6 +8,7 @@ import torch
 import torch.nn.utils as utils
 from tqdm import tqdm
 
+
 class Trainer():
     def __init__(self, args, loader, my_model, my_loss, ckp):
         self.args = args
@@ -34,8 +35,9 @@ class Trainer():
         self.ckp.write_log(
             '[Epoch {}]\tLearning rate: {:.2e}'.format(epoch, Decimal(lr))
         )
+
         self.loss.start_log()
-        self.model.train()
+        self.model.train()  # training属性设定为True
 
         timer_data, timer_model = utility.timer(), utility.timer()
         for batch, (lr, hr, _, idx_scale) in enumerate(self.loader_train):
@@ -97,7 +99,7 @@ class Trainer():
                         save_list.extend([lr, hr])
 
                     if self.args.save_results:
-                        self.ckp.save_results(d, filename[0], save_list, scale)
+                        self.ckp.save_results(d, filename[0], save_list, scale, epoch)
 
                 self.ckp.log[-1, idx_data, idx_scale] /= len(d)
                 best = self.ckp.log.max(0)
@@ -118,7 +120,7 @@ class Trainer():
             self.ckp.end_background()
 
         if not self.args.test_only:
-            self.ckp.save(self, epoch, is_best=(best[1][0, 0] + 1 == epoch))
+            self.ckp.save(self, epoch, is_best=(best[1][0, 0] + 1 == epoch))  # 保存model
 
         self.ckp.write_log(
             'Total: {:.2f}s\n'.format(timer_test.toc()), refresh=True

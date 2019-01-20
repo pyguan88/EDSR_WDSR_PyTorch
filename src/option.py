@@ -19,10 +19,10 @@ parser.add_argument('--seed', type=int, default=1,
                     help='random seed')
 
 # Data specifications
-parser.add_argument('--dir_data', type=str, default='../../../dataset',
-                    help='dataset directory')
+parser.add_argument('--dir_data', type=str, default='../../EDSR-Dataset',
+                    help='dataset directory')  # 数据集目录
 parser.add_argument('--dir_demo', type=str, default='../test',
-                    help='demo image directory')
+                    help='demo image directory')  # 测试图片根目录
 parser.add_argument('--data_train', type=str, default='DIV2K',
                     help='train dataset name')
 parser.add_argument('--data_test', type=str, default='DIV2K',
@@ -46,12 +46,14 @@ parser.add_argument('--no_augment', action='store_true',
 
 # Model specifications
 parser.add_argument('--model', default='EDSR',
-                    help='model name')
+                    help='model name')  # model下脚本名，选择为应用模型
 
 parser.add_argument('--act', type=str, default='relu',
                     help='activation function')
-parser.add_argument('--pre_train', type=str, default='',
-                    help='pre-trained model directory')
+parser.add_argument('--pre_train', type=str, default='', # ../experiment/edsr_baseline_x4_原始结果/model/model_latest.pt
+                    help='pre-trained model directory')  # download则下载并加载，路径则加载路径
+                                                         # 受resume参数影响
+
 parser.add_argument('--extend', type=str, default='.',
                     help='pre-trained model directory')
 parser.add_argument('--n_resblocks', type=int, default=16,
@@ -139,9 +141,19 @@ parser.add_argument('--save_models', action='store_true',
 parser.add_argument('--print_every', type=int, default=100,
                     help='how many batches to wait before logging training status')
 parser.add_argument('--save_results', action='store_true',
-                    help='save output results')
+                    help='save output results')  # 是否保存eval中生成的结果
 parser.add_argument('--save_gt', action='store_true',
                     help='save low-resolution and high-resolution images together')
+
+# Arguments for WDSR model
+parser.add_argument('--r_mean', type=float, default=0.4488,
+                    help='Mean of R Channel')
+parser.add_argument('--g_mean', type=float, default=0.4371,
+                    help='Mean of G channel')
+parser.add_argument('--b_mean', type=float, default=0.4040,
+                    help='Mean of B channel')
+parser.add_argument('--block_feats', type=int, default=512,
+                    help='Mean of B channel')
 
 args = parser.parse_args()
 template.set_template(args)

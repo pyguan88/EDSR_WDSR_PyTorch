@@ -41,6 +41,7 @@ class timer():
     def reset(self):
         self.acc = 0
 
+
 class checkpoint():
     def __init__(self, args):
         self.args = args
@@ -51,7 +52,7 @@ class checkpoint():
         if not args.load:
             if not args.save:
                 args.save = now
-            self.dir = os.path.join('..', 'experiment', args.save)
+            self.dir = os.path.join('..', 'experiment', args.save)  # save：test
         else:
             self.dir = os.path.join('..', 'experiment', args.load)
             if os.path.exists(self.dir):
@@ -61,6 +62,7 @@ class checkpoint():
                 args.load = ''
 
         if args.reset:
+            print('Remove folder :{}'.format(self.dir))
             os.system('rm -rf ' + self.dir)
             args.load = ''
 
@@ -77,12 +79,13 @@ class checkpoint():
                 f.write('{}: {}\n'.format(arg, getattr(args, arg)))
             f.write('\n')
 
-        self.n_processes = 8
+        self.n_processes = 4
 
     def get_path(self, *subdir):
         return os.path.join(self.dir, *subdir)
 
     def save(self, trainer, epoch, is_best=False):
+        print('model save in {}'.format(self.get_path('model')))
         trainer.model.save(self.get_path('model'), epoch, is_best=is_best)
         trainer.loss.save(self.dir)
         trainer.loss.plot_loss(self.dir, epoch)
@@ -145,17 +148,25 @@ class checkpoint():
         while not self.queue.empty(): time.sleep(1)
         for p in self.process: p.join()
 
-    def save_results(self, dataset, filename, save_list, scale):
+    def save_results(self, dataset, filename, save_list, scale, epoch=None):
         if self.args.save_results:
-            filename = self.get_path(
-                'results-{}'.format(dataset.dataset.name),
-                '{}_x{}_'.format(filename, scale)
-            )
+            if epoch:
+                os.makedirs(self.get_path('results-{}-epoch-{}'.format(dataset.dataset.name, epoch)), exist_ok=True)
+                filename = self.get_path(
+                    'results-{}-epoch-{}'.format(dataset.dataset.name, epoch),
+                    '{}_x{}_'.format(filename, scale)
+                )
+            else:
+                filename = self.get_path(
+                    'results-{}'.format(dataset.dataset.name),
+                    '{}_x{}_'.format(filename, scale)
+                )
 
             postfix = ('SR', 'LR', 'HR')
             for v, p in zip(save_list, postfix):
                 normalized = v[0].mul(255 / self.args.rgb_range)
                 tensor_cpu = normalized.byte().permute(1, 2, 0).cpu()
+                # print('{}{}.png'.format(filename, p))  # 可以查看输出图片路径
                 self.queue.put(('{}{}.png'.format(filename, p), tensor_cpu))
 
 def quantize(img, rgb_range):
