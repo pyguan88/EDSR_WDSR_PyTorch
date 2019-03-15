@@ -1,3 +1,9 @@
+# 简单介绍
+![『计算机视觉』超分辨率重建技术整理](https://www.cnblogs.com/hellcat/p/10481282.html)<br>
+本项目 fork 自网上开源项目，以 EDSR 算法为基准，在原工程基础上添加了 WDSR 算法，并部分添加了注释，训练方法在 `/src/demo.sh` 下记录，注意不要去执行这个文件，该文件里面记录了工程的各种启动方式，选择想要执行的拷贝到命令行即可。<br>
+由于项目涉及大量的多进程操作，使得本工程在 windows 下不能正常执行，请在 Linux 下测试本工程。<br>
+如需使用 WDSR ，把命令行指令相应位置的 EDSR 改写为 WDSR_a 或者 WDSR_b 即可（不区分大小写）。<br>
+
 **About PyTorch 1.0.0**
   * We support PyTorch 1.0.0. If you prefer the previous versions of PyTorch, use legacy branches.
   * ``--ext bin`` is not supported. Also, please erase your bin files with ``--ext sep-reset``. Once you successfully build those bin files, you can remove ``-reset`` from the argument.
