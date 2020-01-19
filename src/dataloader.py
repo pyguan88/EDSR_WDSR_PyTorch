@@ -51,11 +51,14 @@ def _ms_loop(dataset, index_queue, data_queue, done_event, collate_fn, scale, se
         if init_fn is not None:
             init_fn(worker_id)
 
-        watchdog = ManagerWatchdog()
+#         watchdog = ManagerWatchdog()
+        watchdog = _utils.worker.ManagerWatchdog()
 
         while watchdog.is_alive():
+#             try:
+#                 r = index_queue.get(timeout=MP_STATUS_CHECK_INTERVAL)
             try:
-                r = index_queue.get(timeout=MP_STATUS_CHECK_INTERVAL)
+                r = index_queue.get(timeout=_utils.MP_STATUS_CHECK_INTERVAL)
             except queue.Empty:
                 continue
 
@@ -73,8 +76,10 @@ def _ms_loop(dataset, index_queue, data_queue, done_event, collate_fn, scale, se
 
                 samples = collate_fn([dataset[i] for i in batch_indices])
                 samples.append(idx_scale)
+#             except Exception:
+#                 data_queue.put((idx, ExceptionWrapper(sys.exc_info())))
             except Exception:
-                data_queue.put((idx, ExceptionWrapper(sys.exc_info())))
+                data_queue.put((idx, _utils.ExceptionWrapper(sys.exc_info())))
             else:
                 data_queue.put((idx, samples))
     except KeyboardInterrupt:
@@ -134,7 +139,8 @@ class _MSDataLoaderIter(_DataLoaderIter):
             if self.pin_memory:
                 self.data_queue = queue.Queue()
                 pin_memory_thread = threading.Thread(
-                    target=_pin_memory_loop,
+#                     target=_pin_memory_loop,
+                    target=_utils.pin_memory._pin_memory_loop,
                     args=(
                         self.worker_result_queue,
                         self.data_queue,
@@ -148,8 +154,10 @@ class _MSDataLoaderIter(_DataLoaderIter):
             else:
                 self.data_queue = self.worker_result_queue
 
-            _update_worker_pids(id(self), tuple(w.pid for w in self.workers))
-            _set_SIGCHLD_handler()
+#             _update_worker_pids(id(self), tuple(w.pid for w in self.workers))
+#             _set_SIGCHLD_handler()
+            _utils.signal_handling._set_worker_pids(id(self), tuple(w.pid for w in self.workers))
+            _utils.signal_handling._set_SIGCHLD_handler()
             self.worker_pids_set = True
 
             for _ in range(2 * self.num_workers):
@@ -159,7 +167,7 @@ class MSDataLoader(DataLoader):
     def __init__(
         self, args, dataset, batch_size=1, shuffle=False,
         sampler=None, batch_sampler=None,
-        collate_fn=default_collate, pin_memory=False, drop_last=False,
+        collate_fn=_utils.collate.default_collate, pin_memory=False, drop_last=False,
         timeout=0, worker_init_fn=None):
 
         super(MSDataLoader, self).__init__(
